@@ -24,11 +24,12 @@ sudo chmod +x add-swap-5g.sh
 sudo ./add-swap-5g.sh
 ```
 
+
 ### 一键脚本
 ```bash
 # 下载脚本
 bash <(curl -fsSL https://raw.githubusercontent.com/XTBANNY/add-swap-5gb/main/add-swap-5g.sh)
-
+```
 
 
 ### 验证结果
