@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# add-swap-5g.sh – 在 Ubuntu 上快速添加 5 GiB swapfile
+# 用法：sudo bash add-swap-5g.sh
+
+set -euo pipefail
+
+SWAPFILE="/swapfile"
+SIZE_MiB=5120          # 5 GiB
+
+# 检查是否以 root 身份运行
+if [[ $EUID -ne 0 ]]; then
+   echo "请使用 sudo 运行该脚本: sudo bash $0"
+   exit 1
+fi
+
+# 若 swapfile 已存在或 /etc/fstab 中已包含 /swapfile，则退出
+if [[ -f $SWAPFILE ]]; then
+    echo "检测到 $SWAPFILE 已存在，脚本已退出，避免重复操作。"
+    exit 0
+fi
+
+if grep -qs "$SWAPFILE" /etc/fstab; then
+    echo "/etc/fstab 中已存在 $SWAPFILE 条目，脚本已退出。"
+    exit 0
+fi
+
+echo ">>> 开始创建 ${SIZE_MiB}MiB 的 swapfile …"
+dd if=/dev/zero of="$SWAPFILE" bs=1M count=$SIZE_MiB status=progress
+
+echo ">>> 设置权限 600 …"
+chmod 600 "$SWAPFILE"
+
+echo ">>> 格式化为 swap …"
+mkswap "$SWAPFILE"
+
+echo ">>> 立即启用 swap …"
+swapon "$SWAPFILE"
+
+echo ">>> 写入 /etc/fstab，保证重启后自动挂载 …"
+echo "$SWAPFILE none swap sw 0 0" >> /etc/fstab
+
+echo ">>> 验证结果："
+swapon --show
+free -h
+
+echo "✅ 5 GiB swapfile 创建并启用完成！"
